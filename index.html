@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101827">
+  <title>Tres en raya</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23101827'/%3E%3Cpath d='M38 14v72M62 14v72M14 38h72M14 62h72' stroke='%23475b7d' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M18 18l14 14M32 18L18 32' stroke='%2338bdf8' stroke-width='6' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='8' fill='none' stroke='%23fb7185' stroke-width='6'/%3E%3Cpath d='M68 68l14 14M82 68L68 82' stroke='%2338bdf8' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23101827'/%3E%3Cpath d='M38 14v72M62 14v72M14 38h72M14 62h72' stroke='%23475b7d' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M18 18l14 14M32 18L18 32' stroke='%2338bdf8' stroke-width='6' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='50' r='8' fill='none' stroke='%23fb7185' stroke-width='6'/%3E%3Cpath d='M68 68l14 14M82 68L68 82' stroke='%2338bdf8' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+
+  <style>
+    :root {
+      --fondo: #101827;
+      --panel: #18243a;
+      --casilla: #223452;
+      --casilla-hover: #2d4770;
+      --texto: #f8fafc;
+      --azul: #38bdf8;
+      --rosa: #fb7185;
+      --verde: #34d399;
+      --amarillo: #facc15;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      color: var(--texto);
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, #263b68, transparent 35%),
+        radial-gradient(circle at bottom right, #3b1d4f, transparent 35%),
+        var(--fondo);
+    }
+
+    .juego {
+      width: min(100%, 560px);
+      padding: 28px;
+      text-align: center;
+      border-radius: 28px;
+      background: rgba(24, 36, 58, 0.94);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 { margin: 0 0 8px; font-size: clamp(2rem, 8vw, 3.4rem); }
+    .subtitulo { margin: 0 0 22px; color: #b8c5d9; }
+
+    .controles {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    select, .boton {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 16px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    select { color: white; background: #263b5c; }
+    select[hidden] { display: none; }
+
+    .boton { color: #07111f; background: linear-gradient(135deg, #67e8f9, #38bdf8); }
+
+    .marcador {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .jugador {
+      padding: 13px;
+      border-radius: 16px;
+      background: #111b2d;
+      transition: 0.2s;
+    }
+
+    .jugador.activo { transform: translateY(-3px); box-shadow: 0 0 0 2px var(--amarillo); }
+    .jugador strong { display: block; margin-top: 4px; font-size: 1.8rem; }
+    .jugador-x { color: var(--azul); }
+    .jugador-o { color: var(--rosa); }
+
+    #estado {
+      min-height: 28px;
+      margin: 16px 0;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .tablero {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: min(100%, 400px);
+      margin: 0 auto 22px;
+    }
+
+    .casilla {
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 20px;
+      color: white;
+      font-size: clamp(3rem, 15vw, 5.5rem);
+      font-weight: 900;
+      cursor: pointer;
+      background: var(--casilla);
+      box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      font-family: inherit;
+    }
+
+    /* El efecto hover solo en dispositivos con ratón (en móvil se quedaba "pegado") */
+    @media (hover: hover) {
+      .casilla:hover:not(:disabled) { transform: scale(1.04); background: var(--casilla-hover); }
+    }
+    .casilla:active:not(:disabled) { transform: scale(0.96); }
+    .casilla:focus-visible { outline: 3px solid var(--amarillo); outline-offset: 2px; }
+    .casilla:disabled { cursor: default; }
+
+    .casilla.x { color: var(--azul); animation: aparecer 0.25s ease-out; }
+    .casilla.o { color: var(--rosa); animation: aparecer 0.25s ease-out; }
+    .casilla.ganadora { color: #07111f; background: var(--verde); animation: pulso 0.8s infinite alternate; }
+
+    .reglas {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 16px;
+      color: #c7d2e5;
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    @keyframes aparecer {
+      from { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+      to { opacity: 1; transform: scale(1) rotate(0); }
+    }
+    @keyframes pulso { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .casilla.x, .casilla.o, .casilla.ganadora { animation: none; }
+    }
+
+    @media (max-width: 420px) {
+      .juego { padding: 20px 15px; border-radius: 22px; }
+      .tablero { gap: 8px; }
+      .casilla { border-radius: 15px; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="juego">
+    <h1>Tres en raya</h1>
+
+    <p class="subtitulo">Juega contra otra persona o desafía a la computadora.</p>
+
+    <div class="controles">
+      <select id="modo" aria-label="Modo de juego">
+        <option value="persona">Dos jugadores</option>
+        <option value="computadora">Contra la computadora</option>
+      </select>
+
+      <select id="dificultad" aria-label="Dificultad" hidden>
+        <option value="normal">Normal</option>
+        <option value="dificil">Difícil (imbatible)</option>
+      </select>
+
+      <button class="boton" id="reiniciar">Nueva partida</button>
+    </div>
+
+    <section class="marcador">
+      <div class="jugador jugador-x activo" id="panelX">
+        <span id="nombreX">Jugador X</span>
+        <strong id="puntosX">0</strong>
+      </div>
+
+      <div class="jugador jugador-o" id="panelO">
+        <span id="nombreO">Jugador O</span>
+        <strong id="puntosO">0</strong>
+      </div>
+    </section>
+
+    <div id="estado" role="status" aria-live="polite">Turno del jugador X</div>
+
+    <section class="tablero" aria-label="Tablero de tres en raya">
+      <button class="casilla" data-posicion="0"></button>
+      <button class="casilla" data-posicion="1"></button>
+      <button class="casilla" data-posicion="2"></button>
+      <button class="casilla" data-posicion="3"></button>
+      <button class="casilla" data-posicion="4"></button>
+      <button class="casilla" data-posicion="5"></button>
+      <button class="casilla" data-posicion="6"></button>
+      <button class="casilla" data-posicion="7"></button>
+      <button class="casilla" data-posicion="8"></button>
+    </section>
+
+    <div class="reglas">
+      Forma una línea de tres símbolos horizontal, vertical o diagonal.
+      El primer jugador que lo consiga gana la ronda. También puedes jugar con las teclas 1-9.
+      Empieza uno y otro alternándose en cada partida.
+    </div>
+  </main>
+
+  <script>
+    const casillas = document.querySelectorAll(".casilla");
+    const estado = document.getElementById("estado");
+    const reiniciar = document.getElementById("reiniciar");
+    const modo = document.getElementById("modo");
+    const dificultad = document.getElementById("dificultad");
+
+    const puntosX = document.getElementById("puntosX");
+    const puntosO = document.getElementById("puntosO");
+    const panelX = document.getElementById("panelX");
+    const panelO = document.getElementById("panelO");
+    const nombreO = document.getElementById("nombreO");
+
+    let tablero = Array(9).fill("");
+    let jugadorActual = "X";
+    let primero = "X";            // quién empieza la partida actual (se alterna)
+    let partidaTerminada = false;
+    let temporizador = null;      // turno pendiente de la computadora
+    let marcador = { X: 0, O: 0 };
+
+    const combinacionesGanadoras = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    const contraComputadora = () => modo.value === "computadora";
+    const nombreJugador = j => (j === "O" && contraComputadora()) ? "la computadora" : `el jugador ${j}`;
+
+    casillas.forEach(c => c.addEventListener("click", jugar));
+    reiniciar.addEventListener("click", reiniciarPartida);
+    dificultad.addEventListener("change", reiniciarPartida);
+
+    modo.addEventListener("change", () => {
+      // Al cambiar de modo se empieza de cero: el marcador no mezcla rivales distintos
+      marcador = { X: 0, O: 0 };
+      primero = "X";
+      dificultad.hidden = !contraComputadora();
+      nombreO.textContent = contraComputadora() ? "Computadora" : "Jugador O";
+      actualizarMarcador();
+      reiniciarPartida();
+    });
+
+    // Teclado: 1-9 coloca en la casilla correspondiente
+    document.addEventListener("keydown", e => {
+      if (e.target.tagName === "SELECT" || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (/^[1-9]$/.test(e.key)) {
+        const c = casillas[Number(e.key) - 1];
+        if (!c.disabled) c.click();
+      }
+    });
+
+    function jugar(evento) {
+      const posicion = Number(evento.currentTarget.dataset.posicion);
+
+      if (partidaTerminada || tablero[posicion] !== "" || (contraComputadora() && jugadorActual === "O")) return;
+
+      colocarMarca(posicion, jugadorActual);
+
+      const resultado = comprobarResultado();
+      if (resultado) return terminarPartida(resultado);
+
+      cambiarJugador();
+      turnoComputadora();
+    }
+
+    function turnoComputadora() {
+      if (!contraComputadora() || jugadorActual !== "O" || partidaTerminada) return;
+
+      estado.textContent = "La computadora está pensando...";
+      bloquearTablero(true);
+
+      temporizador = setTimeout(() => {
+        temporizador = null;
+        movimientoComputadora();
+        // Solo se vuelve a habilitar el tablero si la partida sigue (antes se reactivaban casillas tras terminar)
+        if (!partidaTerminada) bloquearTablero(false);
+      }, 500);
+    }
+
+    function colocarMarca(posicion, jugador) {
+      tablero[posicion] = jugador;
+      casillas[posicion].textContent = jugador;
+      casillas[posicion].classList.add(jugador.toLowerCase());
+      casillas[posicion].disabled = true;
+      casillas[posicion].setAttribute("aria-label", `Casilla ${posicion + 1}: ${jugador}`);
+    }
+
+    function movimientoComputadora() {
+      const movimiento = dificultad.value === "dificil" ? mejorMovimiento() : elegirMovimiento();
+      if (movimiento === null) return;
+
+      colocarMarca(movimiento, "O");
+
+      const resultado = comprobarResultado();
+      if (resultado) return terminarPartida(resultado);
+
+      cambiarJugador();
+    }
+
+    function libres() {
+      return tablero.map((v, i) => v === "" ? i : null).filter(i => i !== null);
+    }
+
+    // Nivel normal: gana si puede, bloquea, centro, esquina, al azar
+    function elegirMovimiento() {
+      const espaciosLibres = libres();
+
+      for (const jugador of ["O", "X"]) {   // primero intentar ganar, luego bloquear
+        for (const posicion of espaciosLibres) {
+          tablero[posicion] = jugador;
+          const gana = hayGanador(jugador);
+          tablero[posicion] = "";
+          if (gana) return posicion;
+        }
+      }
+
+      if (tablero[4] === "") return 4;
+
+      const esquinas = [0, 2, 6, 8].filter(p => tablero[p] === "");
+      if (esquinas.length > 0) return esquinas[Math.floor(Math.random() * esquinas.length)];
+
+      return espaciosLibres.length > 0 ? espaciosLibres[Math.floor(Math.random() * espaciosLibres.length)] : null;
+    }
+
+    // Nivel difícil: minimax (nunca pierde)
+    function minimax(turnoO, profundidad) {
+      if (hayGanador("O")) return 10 - profundidad;
+      if (hayGanador("X")) return profundidad - 10;
+      const espacios = libres();
+      if (espacios.length === 0) return 0;
+
+      let mejor = turnoO ? -Infinity : Infinity;
+      for (const p of espacios) {
+        tablero[p] = turnoO ? "O" : "X";
+        const puntaje = minimax(!turnoO, profundidad + 1);
+        tablero[p] = "";
+        mejor = turnoO ? Math.max(mejor, puntaje) : Math.min(mejor, puntaje);
+      }
+      return mejor;
+    }
+
+    function mejorMovimiento() {
+      let mejorPuntaje = -Infinity, candidatos = [];
+      for (const p of libres()) {
+        tablero[p] = "O";
+        const puntaje = minimax(false, 1);
+        tablero[p] = "";
+        if (puntaje > mejorPuntaje) { mejorPuntaje = puntaje; candidatos = [p]; }
+        else if (puntaje === mejorPuntaje) candidatos.push(p);
+      }
+      return candidatos.length ? candidatos[Math.floor(Math.random() * candidatos.length)] : null;
+    }
+
+    function hayGanador(jugador) {
+      return combinacionesGanadoras.some(c => c.every(p => tablero[p] === jugador));
+    }
+
+    function comprobarResultado() {
+      for (const combinacion of combinacionesGanadoras) {
+        const [a, b, c] = combinacion;
+        if (tablero[a] && tablero[a] === tablero[b] && tablero[a] === tablero[c]) {
+          return { ganador: tablero[a], combinacion };
+        }
+      }
+      if (tablero.every(c => c !== "")) return { empate: true };
+      return null;
+    }
+
+    function terminarPartida(resultado) {
+      partidaTerminada = true;
+      bloquearTablero(true);
+      primero = primero === "X" ? "O" : "X";   // la próxima partida empieza el otro
+
+      if (resultado.empate) {
+        estado.textContent = "¡Empate! 🤝";
+        actualizarJugadorActivo();
+        return;
+      }
+
+      const ganador = resultado.ganador;
+      marcador[ganador]++;
+      actualizarMarcador();
+
+      resultado.combinacion.forEach(p => casillas[p].classList.add("ganadora"));
+
+      estado.textContent = (ganador === "O" && contraComputadora())
+        ? "¡Ganó la computadora! 🤖"
+        : `¡Ganó el jugador ${ganador}! 🎉`;
+
+      actualizarJugadorActivo();
+    }
+
+    function cambiarJugador() {
+      jugadorActual = jugadorActual === "X" ? "O" : "X";
+      estado.textContent = (contraComputadora() && jugadorActual === "O")
+        ? "Turno de la computadora 🤖"
+        : `Turno del jugador ${jugadorActual}`;
+      actualizarJugadorActivo();
+    }
+
+    function actualizarMarcador() {
+      puntosX.textContent = marcador.X;
+      puntosO.textContent = marcador.O;
+    }
+
+    function actualizarJugadorActivo() {
+      panelX.classList.toggle("activo", jugadorActual === "X" && !partidaTerminada);
+      panelO.classList.toggle("activo", jugadorActual === "O" && !partidaTerminada);
+    }
+
+    function bloquearTablero(bloquear) {
+      casillas.forEach((casilla, posicion) => {
+        casilla.disabled = bloquear || tablero[posicion] !== "";
+      });
+    }
+
+    function reiniciarPartida() {
+      clearTimeout(temporizador);   // cancela un turno pendiente de la computadora (antes jugaba en la partida nueva)
+      temporizador = null;
+
+      tablero = Array(9).fill("");
+      jugadorActual = primero;
+      partidaTerminada = false;
+
+      casillas.forEach((casilla, i) => {
+        casilla.textContent = "";
+        casilla.disabled = false;
+        casilla.className = "casilla";
+        casilla.setAttribute("aria-label", `Casilla ${i + 1}: vacía`);
+      });
+
+      estado.textContent = (contraComputadora() && jugadorActual === "O")
+        ? "Turno de la computadora 🤖"
+        : `Turno del jugador ${jugadorActual}`;
+      actualizarJugadorActivo();
+      turnoComputadora();   // si le toca empezar a la computadora
+    }
+
+    reiniciarPartida();
+  </script>
+</body>
+</html>
